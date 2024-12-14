@@ -1,0 +1,8 @@
+#vs stuff
+.vs
+.vscode
+.cache
+
+#build stuff
+*.exe
+/build/*
