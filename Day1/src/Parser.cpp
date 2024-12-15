@@ -4,6 +4,7 @@
 #include <string>
 #include <cmath>
 #include <iostream>
+#include <system_error>
 
 void Parser::populateLists(const char* path)
 {
@@ -46,7 +47,7 @@ void Parser::addToList(List& list, const int value)
     list.emplace_back(value);
 }
 
-int Parser::printDistance()
+void Parser::printDistance()
 {
     int distance{};
 
@@ -55,5 +56,24 @@ int Parser::printDistance()
         distance += abs(m_list1[i] - m_list2[i]);
     }
     std::cout << distance;
-    return distance;
+}
+
+void Parser::printSimScore()
+{
+    int simScore{};
+    int appearances{};
+
+    for (auto a : m_list1)
+    {
+        for(auto b : m_list2)
+        {
+            if(a == b)
+            {
+                appearances++;
+            }
+        }
+        simScore += a * appearances;
+        appearances = 0;
+    }
+    std::cout << simScore;
 }
