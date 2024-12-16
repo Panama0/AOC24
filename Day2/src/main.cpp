@@ -3,6 +3,6 @@
 int main()
 {
     Reports reports;
-    reports.loadFromFile("../res/input");
+    reports.loadFromFile("../res/inputd");
     reports.printSafeCount();
 }

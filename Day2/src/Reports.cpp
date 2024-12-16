@@ -72,10 +72,14 @@ void Reports::printSafeCount()
     std::cout << "The total safe reports is: "<< safeCount << '\n';
 }
 
-bool Reports::isSafe(const std::vector<int>& report)
+bool Reports::isSafe(std::vector<int>& report)
 {
     size_t incCount{1};
     size_t decCount{1};
+
+    bool failedDiff{false};
+    int failedDiffCount{};
+    int differance{};
     
     for(size_t i{1}; i < report.size(); i++)
     {
@@ -88,19 +92,43 @@ bool Reports::isSafe(const std::vector<int>& report)
         {
             decCount++;
         }
-
-        int differance{std::abs(report[i-1] - report[i])};
-        if(differance > 3 || differance == 0)
+        
+        if(!failedDiff)
         {
-            return false;
+            differance = std::abs(report[i-1] - report[i]);
         }
+        else
+        {
+            differance = std::abs(report[i-2] - report[i]);
+            failedDiff = false;
+        }
+        
+        if((differance > 3 || differance == 0))
+        {
+            failedDiff = true;
+            failedDiffCount++;
 
+            if(failedDiffCount > 1)
+            {
+                return false;
+            }
+        }
     }
+
+
     
     if(incCount == report.size() || decCount == report.size())
     {
         return true;
     }
-
-    return false;
+    else if (incCount == report.size() - 1 && decCount == 2)
+    {
+        return true;
+    }
+    else if (decCount == report.size() - 1 && incCount == 2)
+    {
+        return true;
+    }
+    
+    return true;
 }
