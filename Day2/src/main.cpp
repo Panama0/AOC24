@@ -1,6 +1,4 @@
 #include "Reports.hpp"
-#include <cassert>
-#include <vector>
 
 int main()
 {
