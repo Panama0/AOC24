@@ -19,33 +19,49 @@ void Mul::parse(const char* file)
     // this regex part is very slowwww
     // only takes 1ms in release tho lul
     
-    std::vector<std::string> matches{};
-    std::regex regex(R"(mul\((\d+),(\d+)\))");
+    std::vector<std::string> instructions{};
+    std::regex regex(R"(mul\(\d+,\d+\)|do\(\)|don't\(\))");
     
     for(std::sregex_iterator it(fileContents.begin(), fileContents.end(), regex); it != std::sregex_iterator(); it++)
     {
         std::smatch match{*it};
-        matches.emplace_back(match.str());
+        instructions.emplace_back(match.str());
     }
 
-    getPairs(matches);
+    getPairs(instructions);
 }
 
-void Mul::getPairs(const std::vector<std::string>& matches)
+void Mul::getPairs(const std::vector<std::string>& instructions)
 {
-    for(auto match : matches)
+    bool enabled{true};
+    
+    for(auto instruction : instructions)
     {
-        size_t start{match.find('(') + 1};
-        size_t middle{match.find(',')};
-        size_t end{match.find(')') - 1};
+        if(instruction == "do()")
+        {
+            enabled = true;
+            continue;
+        }
+        else if(instruction == "don't()")
+        {
+            enabled = false;
+            continue;
+        }
         
-        size_t firstLength{middle - start};
-        size_t secondLengh{end - middle};
-        
-        int first{std::stoi(match.substr(start, firstLength))};
-        int second{std::stoi(match.substr(middle + 1, secondLengh))};
-        
-        m_pairs.emplace_back(Pair<int>{first, second});
+        if(enabled)
+        {
+            size_t start{instruction.find('(') + 1};
+            size_t middle{instruction.find(',')};
+            size_t end{instruction.find(')') - 1};
+            
+            size_t firstLength{middle - start};
+            size_t secondLengh{end - middle};
+            
+            int first{std::stoi(instruction.substr(start, firstLength))};
+            int second{std::stoi(instruction.substr(middle + 1, secondLengh))};
+            
+            m_pairs.emplace_back(Pair<int>{first, second});
+        }
     }
 }
 
