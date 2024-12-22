@@ -6,5 +6,6 @@ int main()
     Timing::start();
     Mul mul;
     mul.parse("../res/input");
+    mul.printProduct();
     Timing::end();
 }
