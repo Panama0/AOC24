@@ -4,7 +4,6 @@
 #include <string>
 #include <cmath>
 #include <iostream>
-#include <system_error>
 
 void Parser::populateLists(const char* path)
 {
