@@ -40,7 +40,7 @@ bool checkWord(std::string_view input, std::string_view searchString)
     return false;
 }
 
-void search(const std::vector<std::string>& input, std::string_view searchStr)
+void searchP1(const std::vector<std::string>& input, std::string_view searchStr)
 {
     std::string reverseSearchStr;
     for(auto it = searchStr.rbegin(); it != searchStr.rend(); it++)
@@ -56,9 +56,9 @@ void search(const std::vector<std::string>& input, std::string_view searchStr)
     
     std::string currentWord;
     
-    for(size_t y{}; y < input[0].size(); y++)
+    for(size_t y{}; y < boardHeight; y++)
     {
-        for(size_t x{}; x < input.size(); x++)
+        for(size_t x{}; x < boardWidth; x++)
         {
             // ---horizontal---
             
@@ -127,11 +127,57 @@ void search(const std::vector<std::string>& input, std::string_view searchStr)
         << wordCount << '\n';
 }
 
+void searchP2(const std::vector<std::string>& input, std::string_view searchStr)
+{
+    std::string reverseSearchStr;
+    for(auto it = searchStr.rbegin(); it != searchStr.rend(); it++)
+    {
+        reverseSearchStr.push_back(*it);
+    }
+    
+    int wordCount{};
+    
+    size_t searchStrSize{searchStr.size()};
+    size_t boardWidth{input.front().size()};
+    size_t boardHeight{input.size()};
+    
+    std::string currentWordDown;
+    std::string currentWordUp;
+    
+    for(size_t y{}; y < boardHeight; y++)
+    {
+        for(size_t x{}; x < boardWidth; x++)
+        {
+            // build up current words
+            for(size_t i{}; i < searchStrSize && x <= boardWidth - searchStrSize && y <= boardHeight - searchStrSize; i++)
+            {
+                currentWordDown.push_back(input[y+i][x+i]);
+                currentWordUp.push_back(input[(y-i)+searchStrSize - 1][x+i]);
+            }
+            
+            if(checkWord(currentWordUp, searchStr) || checkWord(currentWordUp, reverseSearchStr))
+            {
+                if(checkWord(currentWordDown, searchStr) || checkWord(currentWordDown, reverseSearchStr))
+                {
+                    wordCount++;
+                }
+            }
+
+            currentWordDown.clear();
+            currentWordUp.clear();
+        }
+    }
+    
+    std::cout << "The number of occurances of " << searchStr << " was: "
+        << wordCount << '\n';
+}
+
 int main()
 {
     std::vector<std::string> searchData;
-    std::string searchString{"XMAS"};
+    std::string searchString{"MAS"};
     
     parse("../res/input", searchData);
-    search(searchData, searchString);    
+    //searchP1(searchData, searchString);
+    searchP2(searchData, searchString);
 }
