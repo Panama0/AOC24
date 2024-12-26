@@ -1,4 +1,3 @@
-
 #include <cassert>
 #include <cstddef>
 #include <string_view>
@@ -40,7 +39,7 @@ bool checkWord(std::string_view input, std::string_view searchString)
     return false;
 }
 
-void searchP1(const std::vector<std::string>& input, std::string_view searchStr)
+int searchP1(const std::vector<std::string>& input, std::string_view searchStr)
 {
     std::string reverseSearchStr;
     for(auto it = searchStr.rbegin(); it != searchStr.rend(); it++)
@@ -120,14 +119,10 @@ void searchP1(const std::vector<std::string>& input, std::string_view searchStr)
             currentWord.clear();
         }
     }
-    
-
-    
-    std::cout << "The number of occurances of " << searchStr << " was: "
-        << wordCount << '\n';
+    return wordCount;
 }
 
-void searchP2(const std::vector<std::string>& input, std::string_view searchStr)
+int searchP2(const std::vector<std::string>& input, std::string_view searchStr)
 {
     std::string reverseSearchStr;
     for(auto it = searchStr.rbegin(); it != searchStr.rend(); it++)
@@ -162,14 +157,10 @@ void searchP2(const std::vector<std::string>& input, std::string_view searchStr)
                     wordCount++;
                 }
             }
-
-            currentWordDown.clear();
-            currentWordUp.clear();
         }
     }
     
-    std::cout << "The number of occurances of " << searchStr << " was: "
-        << wordCount << '\n';
+    return wordCount;
 }
 
 int main()
@@ -179,5 +170,8 @@ int main()
     
     parse("../res/input", searchData);
     //searchP1(searchData, searchString);
-    searchP2(searchData, searchString);
+    int wordCount{searchP2(searchData, searchString)};
+    
+    std::cout << "The number of occurances of " << searchString << " was: "
+        << wordCount << '\n';
 }
