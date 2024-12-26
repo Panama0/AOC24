@@ -1,7 +1,10 @@
+#include <cstddef>
 #include <fstream>
 #include <string>
 #include <utility>
 #include <vector>
+#include <cassert>
+#include <iostream>
 
 namespace Types
 {
@@ -52,7 +55,7 @@ void parseIns(Types::Instructions& ins, std::fstream& fin)
     }
 }
 
-void parseUpdates(Types::Updates& updatePages, std::fstream& fin)
+void parseUpdates(Types::Updates& updates, std::fstream& fin)
 {
     char ch;
     std::string word;
@@ -70,7 +73,7 @@ void parseUpdates(Types::Updates& updatePages, std::fstream& fin)
         else if(ch == '\n')
         {
             currentUpdate.emplace_back(std::stoi(word));
-            updatePages.emplace_back(currentUpdate);
+            updates.emplace_back(currentUpdate);
             currentUpdate.clear();
             word.clear();
         }
@@ -89,6 +92,75 @@ void parse(const char* file, Types::Instructions& instructions, Types::Updates& 
     parseUpdates(updatePages, fin);
 }
 
+bool checkSingleUpdate(const std::vector<int>& update, const Types::Instructions& ins)
+{
+
+    for(auto instruction : ins)
+    {
+        int i{};
+        
+        bool firstFound{false};
+        bool secondFound{false};
+        
+        int firstIndex{};
+        int secondIndex{};
+        
+        for(auto page : update)
+        {
+            
+            if(page == instruction.first)
+            {
+                firstFound = true;
+                firstIndex = i;
+            }
+            else if(page == instruction.second)
+            {
+                secondFound = true;
+                secondIndex = i;
+            }
+            
+            if(firstFound && secondFound)
+            {
+                if(firstIndex > secondIndex)
+                {
+                    return false;
+                }
+            }
+            
+            i++;
+        }
+    }
+    // nothing failed
+    return true;
+}
+
+Types::Updates checkUpdates(const Types::Instructions& ins, const Types::Updates& updates)
+{
+    Types::Updates correctUpdates;
+    
+    for(auto update : updates)      // loop through each update
+    {
+        if(checkSingleUpdate(update, ins))
+        {
+            correctUpdates.emplace_back(update);
+        }
+    }
+    
+    return correctUpdates;
+}
+
+void printMiddleSum(const Types::Updates& updates)
+{
+    int sum{};
+    
+    for(auto update : updates)
+    {
+        size_t midpoint{update.size() / 2};     // integer division woo
+        sum += update[midpoint];
+    }
+    std::cout << "The midpoint sum was: " << sum << '\n';
+}
+
 int main()
 {
     Types::Instructions instructions;
@@ -96,4 +168,7 @@ int main()
     
     
     parse("../res/input", instructions, updatePages);
+    Types::Updates correctUpdates = checkUpdates(instructions, updatePages);
+    
+    printMiddleSum(correctUpdates);
 }
