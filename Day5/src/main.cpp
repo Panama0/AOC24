@@ -1,10 +1,9 @@
+#include <cstddef>
 #include <fstream>
 #include <string>
 #include <utility>
 #include <vector>
-#include <cassert>
 #include <iostream>
-
 #include "Timing.hpp"
 
 namespace Types
@@ -147,14 +146,9 @@ Types::UpdateVailidity checkSingleUpdate(const std::vector<int>& update, const T
                     Types::FailedInstruction failData{instruction.first, instruction.second, firstIndex, secondIndex};
                     
                     result.failedInstructions.emplace_back(failData);
-                    
-                    firstFound = {};
-                    secondFound = {};
-                    firstIndex = {};
-                    secondIndex = {}; 
                 }
+                break;
             }
-            
             i++;
         }
     }
@@ -188,6 +182,7 @@ std::vector<int> fixUpdate(const std::vector<int>& update, const Types::UpdateVa
                 moveIt->offset--;
                 sf = true;
             }
+            if(ff && sf) {break;}
         }
         
         if(!ff)
@@ -222,30 +217,24 @@ std::vector<int> fixUpdate(const std::vector<int>& update, const Types::UpdateVa
 
 Types::Updates checkUpdates(const Types::Instructions& ins, const Types::Updates& updates, bool fix = false)
 {
-    Types::Updates correctUpdates;
-    Types::Updates fixedUpdates;
+    Types::Updates updatesOut;
     
     for(auto update : updates)      // loop through each update
     {
         if(Types::UpdateVailidity failData = checkSingleUpdate(update, ins))
         {
-            correctUpdates.emplace_back(update);
+            if(!fix)
+            {
+                updatesOut.emplace_back(update);
+            }
         }
         else
         {
-            fixedUpdates.emplace_back(fixUpdate(update, failData));
+            updatesOut.emplace_back(fixUpdate(update, failData));
         } 
     }
     
-    
-    if(fix)
-    {
-        return fixedUpdates;
-    }
-    else
-    {
-        return correctUpdates;
-    }
+    return updatesOut;
 }
 
 void printMiddleSum(const Types::Updates& updates)
