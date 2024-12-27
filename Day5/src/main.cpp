@@ -1,4 +1,3 @@
-#include <cstddef>
 #include <fstream>
 #include <string>
 #include <utility>
@@ -6,10 +5,29 @@
 #include <cassert>
 #include <iostream>
 
+#include "Timing.hpp"
+
 namespace Types
 {
     using Instructions = std::vector<std::pair<int, int>>;
     using Updates = std::vector<std::vector<int>>;
+    
+    struct FailedInstruction
+    {
+        int first{};
+        int second{};
+        
+        int firstIndex{};
+        int secondIndex{};
+    };
+    
+    struct UpdateVailidity
+    {
+        bool valid{true};
+        std::vector<FailedInstruction> failedInstructions;
+        
+        operator bool()const { return valid; };
+    };
 }
 
 void parseIns(Types::Instructions& ins, std::fstream& fin)
@@ -92,9 +110,10 @@ void parse(const char* file, Types::Instructions& instructions, Types::Updates& 
     parseUpdates(updatePages, fin);
 }
 
-bool checkSingleUpdate(const std::vector<int>& update, const Types::Instructions& ins)
+Types::UpdateVailidity checkSingleUpdate(const std::vector<int>& update, const Types::Instructions& ins)
 {
-
+    Types::UpdateVailidity result;
+    
     for(auto instruction : ins)
     {
         int i{};
@@ -123,7 +142,16 @@ bool checkSingleUpdate(const std::vector<int>& update, const Types::Instructions
             {
                 if(firstIndex > secondIndex)
                 {
-                    return false;
+                    result.valid = false;
+                    
+                    Types::FailedInstruction failData{instruction.first, instruction.second, firstIndex, secondIndex};
+                    
+                    result.failedInstructions.emplace_back(failData);
+                    
+                    firstFound = {};
+                    secondFound = {};
+                    firstIndex = {};
+                    secondIndex = {}; 
                 }
             }
             
@@ -131,22 +159,93 @@ bool checkSingleUpdate(const std::vector<int>& update, const Types::Instructions
         }
     }
     // nothing failed
-    return true;
+    return result;
 }
 
-Types::Updates checkUpdates(const Types::Instructions& ins, const Types::Updates& updates)
+std::vector<int> fixUpdate(const std::vector<int>& update, const Types::UpdateVailidity& failInfo)
 {
-    Types::Updates correctUpdates;
-    
-    for(auto update : updates)      // loop through each update
+    struct MoveInfo
     {
-        if(checkSingleUpdate(update, ins))
+        int page{};
+        int offset{};
+    };
+    std::vector<MoveInfo> moves;
+    
+    for(auto failedIns : failInfo.failedInstructions)
+    {
+        bool ff{false};
+        bool sf{false};
+        
+        for(auto moveIt = moves.begin(); moveIt != moves.end(); moveIt++)
         {
-            correctUpdates.emplace_back(update);
+            if(moveIt->page == failedIns.first)
+            {
+                moveIt->offset++;
+                ff = true;
+            }
+            else if((*moveIt).page == failedIns.second)
+            {
+                moveIt->offset--;
+                sf = true;
+            }
+        }
+        
+        if(!ff)
+        {
+            moves.emplace_back(MoveInfo{failedIns.first, 1});
+        }
+        
+        if(!sf)
+        {
+            moves.emplace_back(MoveInfo{failedIns.second, -1});
         }
     }
     
-    return correctUpdates;
+    // correct the update
+    std::vector<int> fixedUpdate{update};
+    
+    for(auto move : moves)
+    {
+        int i{};
+        for(auto page : update)
+        {
+            if(page == move.page)
+            {
+                fixedUpdate[i - move.offset] = page;
+            }
+            i++;
+        }
+    }
+    
+    return fixedUpdate;
+}
+
+Types::Updates checkUpdates(const Types::Instructions& ins, const Types::Updates& updates, bool fix = false)
+{
+    Types::Updates correctUpdates;
+    Types::Updates fixedUpdates;
+    
+    for(auto update : updates)      // loop through each update
+    {
+        if(Types::UpdateVailidity failData = checkSingleUpdate(update, ins))
+        {
+            correctUpdates.emplace_back(update);
+        }
+        else
+        {
+            fixedUpdates.emplace_back(fixUpdate(update, failData));
+        } 
+    }
+    
+    
+    if(fix)
+    {
+        return fixedUpdates;
+    }
+    else
+    {
+        return correctUpdates;
+    }
 }
 
 void printMiddleSum(const Types::Updates& updates)
@@ -163,12 +262,16 @@ void printMiddleSum(const Types::Updates& updates)
 
 int main()
 {
+    Timing::start();
     Types::Instructions instructions;
     Types::Updates updatePages;
     
     
     parse("../res/input", instructions, updatePages);
-    Types::Updates correctUpdates = checkUpdates(instructions, updatePages);
+    //Types::Updates correctUpdates = checkUpdates(instructions, updatePages);
     
-    printMiddleSum(correctUpdates);
+    Types::Updates fixedUpdates = checkUpdates(instructions, updatePages, true);
+    
+    printMiddleSum(fixedUpdates);
+    Timing::end();
 }
